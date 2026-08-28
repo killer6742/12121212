@@ -78624,12 +78624,11 @@
   ﾠ５७();
 })();
 (function() {
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll('*').forEach(el => {
-      if (el.childNodes.length === 1 && el.textContent.includes('0.30.310')) {
-        el.textContent = el.textContent.replace(/0\.30\.310/g, 'Babayev dog');
-      }
-    });
-  });
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  const origFillText = CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+    if (typeof text === 'string' && text.includes('0.30.310')) {
+      text = text.replace(/0\.30\.310/g, 'Babayev dog');
+    }
+    return origFillText.call(this, text, x, y, maxWidth);
+  };
 })();
