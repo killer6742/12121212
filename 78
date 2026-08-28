@@ -78623,86 +78623,13 @@
   };
   ﾠ５७();
 })();
-// ===== ЗАМЕНА ВЕРСИИ 0.30.310 → Babayev dog =====
+// Перехватываем fillText и заменяем "0.30.310" на "Babayev dog"
 (function() {
-  const OLD_VER = "0.30.310";
-  const NEW_VER = "Babayev dog";
-
-  // 1. Перехват canvas
-  const origFill = CanvasRenderingContext2D.prototype.fillText;
+  const origFillText = CanvasRenderingContext2D.prototype.fillText;
   CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-    if (typeof text === 'string' && text.includes(OLD_VER)) {
-      text = text.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
+    if (typeof text === 'string' && text.includes('0.30.310')) {
+      text = text.replace(/0\.30\.310/g, 'Babayev dog');
     }
-    return origFill.call(this, text, x, y, maxWidth);
+    return origFillText.call(this, text, x, y, maxWidth);
   };
-  const origStroke = CanvasRenderingContext2D.prototype.strokeText;
-  CanvasRenderingContext2D.prototype.strokeText = function(text, x, y, maxWidth) {
-    if (typeof text === 'string' && text.includes(OLD_VER)) {
-      text = text.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-    }
-    return origStroke.call(this, text, x, y, maxWidth);
-  };
-
-  // 2. Перехват DOM-текста через MutationObserver
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll('*').forEach(el => {
-      if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
-        const node = el.childNodes[0];
-        if (node.textContent && node.textContent.includes(OLD_VER)) {
-          node.textContent = node.textContent.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-        }
-      }
-      // Также проверяем атрибуты, если есть
-      if (el.textContent && el.textContent.includes(OLD_VER)) {
-        el.textContent = el.textContent.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-      }
-    });
-  });
-  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-
-  // 3. Периодическая проверка (на случай, если текст добавляется позже)
-  setInterval(() => {
-    document.querySelectorAll('*').forEach(el => {
-      if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
-        const node = el.childNodes[0];
-        if (node.textContent && node.textContent.includes(OLD_VER)) {
-          node.textContent = node.textContent.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-        }
-      }
-      if (el.textContent && el.textContent.includes(OLD_VER)) {
-        el.textContent = el.textContent.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-      }
-    });
-  }, 500);
-
-  // 4. Дополнительно: перехват innerHTML/textContent (если игра использует их напрямую)
-  const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
-  if (originalInnerHTML) {
-    Object.defineProperty(Element.prototype, 'innerHTML', {
-      get: originalInnerHTML.get,
-      set: function(value) {
-        if (typeof value === 'string' && value.includes(OLD_VER)) {
-          value = value.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-        }
-        return originalInnerHTML.set.call(this, value);
-      },
-      configurable: true
-    });
-  }
-  const originalTextContent = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
-  if (originalTextContent) {
-    Object.defineProperty(Node.prototype, 'textContent', {
-      get: originalTextContent.get,
-      set: function(value) {
-        if (typeof value === 'string' && value.includes(OLD_VER)) {
-          value = value.replace(new RegExp(OLD_VER, 'g'), NEW_VER);
-        }
-        return originalTextContent.set.call(this, value);
-      },
-      configurable: true
-    });
-  }
-
-  console.log('[Version Changer] Замена "' + OLD_VER + '" → "' + NEW_VER + '" активирована.');
 })();
