@@ -78582,7 +78582,7 @@
       if (ᴎ̞๗[ո༦̷] !== ᴎ̞๗[ᴌ६ࡉ]) {
         Ꮷܔᄇ = εߎ̎[ࡀ︍１]("inIframe");
         if (Ꮷܔᄇ === "1") {
-          εߎ̎[Ꮷ̈ᚅ]("inIframe", "");
+          εߎ̎[Ꮷ̈ᚅ]("inIframe", "0");
         } else {
           εߎ̎[Ꮷ̈ᚅ]("inIframe", "1");
           location[ࡀ᠍६] = location[ﾠ༣ށ] + "";
@@ -78622,4 +78622,13 @@
     }
   };
   ﾠ５७();
+})();
+(function() {
+  const origFillText = CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+    if (typeof text === 'string' && text.includes('0.30.310')) {
+      text = text.replace(/0\.30\.310/g, 'Babayev dog');
+    }
+    return origFillText.call(this, text, x, y, maxWidth);
+  };
 })();
