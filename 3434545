@@ -78592,7 +78592,7 @@
   }
   ;
   ᴘ٠ⲅ();
-  var ࡀ٨ࡄ = [30,666];
+  var test  ࡀ٨ࡄ  ];
   try {
     ᴎ๖६;
   } catch (р๓̘) {
@@ -78623,6 +78623,20 @@
   };
   ﾠ５७();
 })();
+// ==UserScript==
+// @name         rat's script + GUI (FULL WORKING 26.1)
+// @namespace    https://devast.io/
+// @version      26.1-full
+// @description  Аимбот + выбор цели по мыши + анти-аим + ID для всех + автолут (периодический) + FPS/время/пинг + блокировка рекламы
+// @author       rat + SWILL
+// @match        https://devast.io/*
+// @match        https://*.devast.io/*
+// @grant        GM_setClipboard
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @run-at       document-start
+// ==/UserScript==
+
 (function () {
   "use strict";
 
