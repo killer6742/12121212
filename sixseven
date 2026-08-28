@@ -78623,12 +78623,1530 @@
   };
   ﾠ５७();
 })();
-(function() {
-  const origFillText = CanvasRenderingContext2D.prototype.fillText;
-  CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-    if (typeof text === 'string' && text.includes('0.30.310')) {
-      text = text.replace(/0\.30\.310/g, 'Babayev dog');
+(function () {
+  "use strict";
+
+  // ===== БЛОКИРОВКА РЕКЛАМЫ =====
+  (function() {
+    if (window._temModLoaded) return;
+    window._temModLoaded = true;
+
+    function lockWindowProp(name, value) {
+      try {
+        Object.defineProperty(window, name, { value, writable: false, configurable: false });
+      } catch (e) {}
     }
-    return origFillText.call(this, text, x, y, maxWidth);
+    lockWindowProp("aiptag", {
+      consented: true,
+      yvD: {
+        display: { ThAT: function () {} },
+        player: {
+          ThAT: function (cb) {
+            if (typeof cb === "function") setTimeout(() => { try { cb(); } catch (e) {} }, 50);
+          }
+        }
+      }
+    });
+    lockWindowProp("aipPlayer", function (obj) {
+      if (obj && typeof obj.AIP_COMPLETE === "function") try { obj.AIP_COMPLETE(); } catch (e) {}
+    });
+    lockWindowProp("Widget", { init: function () {}, filter: function (v) { return v; } });
+
+    function removeAds() {
+      ["bebebaba", "preroll"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = ""; el.style.display = "none"; }
+      });
+      const footer = document.getElementById("footer");
+      if (footer) { footer.querySelectorAll("script").forEach(s => s.remove()); footer.style.display = "none"; }
+      document.querySelectorAll("[id^=\"devast-io_\"]").forEach(el => el.remove());
+    }
+    if (document.readyState !== "loading") removeAds();
+    else document.addEventListener("DOMContentLoaded", removeAds, { once: true });
+    window.addEventListener("load", removeAds, { once: true });
+    document.addEventListener("DOMContentLoaded", () => {
+      const obs = new MutationObserver(mutations => {
+        for (const m of mutations) for (const n of m.addedNodes) {
+          if (n.nodeType === Node.ELEMENT_NODE && n.id && n.id.startsWith("devast-io_")) n.remove();
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    });
+  })();
+
+  // ===== ПЕРЕХВАТ ТЕКСТА (ID игроков) =====
+  const nameIndexMap = new Map();
+
+  function rebuildNameIndexFromMap(playerMap) {
+    nameIndexMap.clear();
+    for (let [id, name] of playerMap.entries()) {
+      if (name && name.trim().length > 0) {
+        nameIndexMap.set(name, id);
+      }
+    }
+  }
+
+  (function hookText() {
+    const _origFillText = CanvasRenderingContext2D.prototype.fillText;
+    const _origStrokeText = CanvasRenderingContext2D.prototype.strokeText;
+    const _origMeasureText = CanvasRenderingContext2D.prototype.measureText;
+
+    function getPlayerIdByName(text) {
+      if (!text) return null;
+      if (nameIndexMap.has(text)) return nameIndexMap.get(text);
+      const trimmed = text.trim();
+      if (trimmed !== text && nameIndexMap.has(trimmed)) return nameIndexMap.get(trimmed);
+      return null;
+    }
+
+    CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+      if (text != null) {
+        const str = String(text);
+        const pid = getPlayerIdByName(str);
+        if (pid) {
+          const lb = str + " #" + pid;
+          return maxWidth !== undefined ? _origFillText.call(this, lb, x, y, 99999) : _origFillText.call(this, lb, x, y);
+        }
+      }
+      return maxWidth !== undefined ? _origFillText.call(this, text, x, y, maxWidth) : _origFillText.call(this, text, x, y);
+    };
+
+    CanvasRenderingContext2D.prototype.strokeText = function(text, x, y, maxWidth) {
+      if (text != null) {
+        const str = String(text);
+        const pid = getPlayerIdByName(str);
+        if (pid) {
+          const lb = str + " #" + pid;
+          return maxWidth !== undefined ? _origStrokeText.call(this, lb, x, y, 99999) : _origStrokeText.call(this, lb, x, y);
+        }
+      }
+      return maxWidth !== undefined ? _origStrokeText.call(this, text, x, y, maxWidth) : _origStrokeText.call(this, text, x, y);
+    };
+
+    CanvasRenderingContext2D.prototype.measureText = function(text) {
+      if (text != null) {
+        const str = String(text);
+        const pid = getPlayerIdByName(str);
+        if (pid) return _origMeasureText.call(this, str + " #" + pid);
+      }
+      return _origMeasureText.call(this, text);
+    };
+  })();
+
+  // ===== ОСНОВНАЯ ЧАСТЬ =====
+  if (window.__solarisx) return;
+  window.__solarisx = true;
+
+  console.log("[rat's script] Initializing...");
+
+  // ===== НАСТРОЙКИ =====
+  window.MOD = {
+    aimEnabled: true,
+    silentAim: false,
+    aimOnShootOnly: false,
+    jitterEnabled: false,
+    esp: true,
+    xray: false,
+    autoloot: true,
+    autorun: false,
+    antiAfk: true,
+    predLine: true,
+    aimPrediction1: 20,
+    aimPrediction2: 40,
+    activePrediction: 1,
+    xrayOpacity: 35,
+    lootDelay: 300,
+    predColor: "#ff4444",
+    jitterColor: "#ffff00",
+    AimbotKey: "KeyB",
+    JitterKey: "KeyJ",
+    AutoRunKey: "KeyQ",
+    AutoLootKey: "KeyT",
+    XrayKey: "KeyZ",
+    PredKey: "KeyX",
+    ShowMines: true,
+    ShowSpikes: true,
+    ShowWires: true,
+    ShowFps: true,
+    ShowPing: true,
+    ShowTime: true,
+    bgColor: "#3D5942",
+    chatSpamEnabled: false,
+    chatSpamText: "Tem Inovation!",
+    chatSpamDelay: 2000,
+    tokenInput: "",
+    SpamToggleKey: "KeyP",
+    antiAimEnabled: false,
+    antiAimSpeed: 300,
+    AntiAimKey: "KeyV",
   };
+
+  try {
+    const saved = localStorage.getItem("solarisx_cfg_v43");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      for (const key in parsed) {
+        if (key in window.MOD) window.MOD[key] = parsed[key];
+      }
+    }
+  } catch (e) {}
+
+  function saveConfig() {
+    try {
+      localStorage.setItem("solarisx_cfg_v43", JSON.stringify(window.MOD));
+    } catch (e) {}
+  }
+
+  function setBackgroundColor(color) {
+    if (!color) return;
+    window.MOD.bgColor = color;
+    const canvas = document.getElementById("can") || document.querySelector("canvas");
+    if (canvas) {
+      canvas.style.background = color;
+    }
+    document.body.style.background = color;
+    saveConfig();
+  }
+
+  // ===== GUI (guify) =====
+  let chatSpamInterval = null;
+
+  function startChatSpam() {
+    if (chatSpamInterval) clearInterval(chatSpamInterval);
+    if (!window.MOD.chatSpamEnabled) return;
+    chatSpamInterval = setInterval(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+      setTimeout(() => {
+        let chatInput = document.querySelector('input[type="text"]:focus, input[class*="chat"], input[placeholder*="message"], input[placeholder*="chat"], .chat-input input');
+        if (!chatInput || chatInput.offsetParent === null) return;
+        const text = window.MOD.chatSpamText.trim();
+        if (!text) return;
+        chatInput.focus();
+        chatInput.value = text;
+        chatInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        chatInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+        chatInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
+        setTimeout(() => chatInput.value = '', 100);
+      }, 150);
+    }, window.MOD.chatSpamDelay);
+  }
+
+  function stopChatSpam() {
+    if (chatSpamInterval) { clearInterval(chatSpamInterval); chatSpamInterval = null; }
+  }
+
+  function toggleChatSpam() {
+    if (window.MOD.chatSpamEnabled) startChatSpam();
+    else stopChatSpam();
+    saveConfig();
+  }
+
+  function extractValuesFromText(text) {
+    const matches = text.match(/"([^"]*)"/g);
+    if (matches && matches.length === 3) {
+      return {
+        token: matches[0].slice(1, -1),
+        tokenId: matches[1].slice(1, -1),
+        userId: matches[2].slice(1, -1)
+      };
+    }
+    return null;
+  }
+
+  function copyTokenToClipboard() {
+    const token = localStorage.getItem("token") || "";
+    const tokenId = localStorage.getItem("tokenId") || "";
+    const userId = localStorage.getItem("userId") || "";
+    const str = `"${token}" "${tokenId}" "${userId}"`;
+    if (typeof GM_setClipboard !== 'undefined') {
+      GM_setClipboard(str);
+      alert("your token copied!");
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = str;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      alert("your token copied!");
+    }
+  }
+
+  function changeTokenFromInput() {
+    const raw = window.MOD.tokenInput.trim();
+    if (!raw) { alert('Вставьте токен (JSON или "token" "tokenId" "userId")'); return; }
+
+    try {
+      const tokenData = JSON.parse(raw);
+      if (typeof tokenData === 'object') {
+        for (let key in tokenData) {
+          if (tokenData.hasOwnProperty(key)) localStorage.setItem(key, tokenData[key]);
+        }
+        alert("your token changed!");
+        localStorage.setItem('swill_force_reload', '1');
+        location.reload();
+        return;
+      }
+    } catch(e) {}
+
+    const parsed = extractValuesFromText(raw);
+    if (parsed) {
+      localStorage.setItem('token', parsed.token);
+      localStorage.setItem('tokenId', parsed.tokenId);
+      localStorage.setItem('userId', parsed.userId);
+      alert("your token changed!");
+      localStorage.setItem('swill_force_reload', '1');
+      location.reload();
+      return;
+    }
+
+    alert('❌ Не удалось распознать формат. Используйте JSON или "token" "tokenId" "userId"');
+  }
+
+  function resetToken() {
+    if (!confirm("do you want reset your token?")) return;
+    const keysToRemove = ['token', 'tokenId', 'userId', 'swill_force_reload'];
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    alert("your token changed!");
+    location.reload();
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  async function initGUI() {
+    if (typeof guify === 'undefined') {
+      await loadScript("https://cdn.jsdelivr.net/npm/guify@0.12.0/lib/guify.min.js");
+    }
+
+    const gui = new guify({
+      title: "test",
+      theme: {
+        name: "Dope Internal Theme",
+        colors: {
+          menuBarBackground: "rgb(0, 0, 0)",
+          menuBarText: "rgba(0, 0, 0, 0.9)",
+          panelBackground: "rgba(0, 0, 0, 0.9)",
+          componentBackground: "rgb(26, 26, 26)",
+          componentForeground: "rgb(255, 255, 255)",
+          textPrimary: "rgb(255, 255, 255)",
+          textSecondary: "rgb(255, 255, 255)",
+          textHover: "rgb(0, 10, 30)"
+        },
+        font: { fontFamily: "Arial", fontSize: "13px", fontWeight: "bold" }
+      },
+      align: "right",
+      width: 400,
+      height: "auto",
+      barMode: "none",
+      panelMode: "scroll",
+      opacity: 90,
+      root: window.container || document.body,
+      open: true,
+      pollRateMS: 10
+    });
+
+    gui.Register([{ type: "folder", label: "AIMBOT", open: false }]);
+    gui.Register([
+      { type: "checkbox", label: "Aim Enabled", object: window.MOD, property: "aimEnabled" },
+      { type: "checkbox", label: "Silent Aim", object: window.MOD, property: "silentAim" },
+      { type: "checkbox", label: "Aim on Shoot Only", object: window.MOD, property: "aimOnShootOnly" },
+      { type: "checkbox", label: "Jitter", object: window.MOD, property: "jitterEnabled" },
+      { type: "checkbox", label: "Prediction Line", object: window.MOD, property: "predLine" },
+      { type: "range", label: "Prediction 1", min: 0, max: 80, step: 1, object: window.MOD, property: "aimPrediction1" },
+      { type: "range", label: "Prediction 2", min: 0, max: 80, step: 1, object: window.MOD, property: "aimPrediction2" },
+      { type: "button", label: "Active Pred: 1 (click to switch)", action: () => {
+          window.MOD.activePrediction = window.MOD.activePrediction === 1 ? 2 : 1;
+          saveConfig();
+          gui.updateDisplay();
+      }},
+      { type: "color", label: "Pred Color", object: window.MOD, property: "predColor" }
+    ], { folder: "AIMBOT" });
+
+    gui.Register([{ type: "folder", label: "VISUALS", open: false }]);
+    gui.Register([
+      { type: "checkbox", label: "ESP", object: window.MOD, property: "esp" },
+      { type: "checkbox", label: "X-Ray", object: window.MOD, property: "xray" },
+      { type: "range", label: "X-Ray Opacity", min: 5, max: 100, step: 5, object: window.MOD, property: "xrayOpacity" },
+      { type: "checkbox", label: "Show Mines", object: window.MOD, property: "ShowMines" },
+      { type: "checkbox", label: "Show Spikes", object: window.MOD, property: "ShowSpikes" },
+      { type: "checkbox", label: "Show Wires", object: window.MOD, property: "ShowWires" },
+      { type: "checkbox", label: "Show FPS", object: window.MOD, property: "ShowFps" },
+      { type: "checkbox", label: "Show Ping", object: window.MOD, property: "ShowPing" },
+      { type: "checkbox", label: "Show Time", object: window.MOD, property: "ShowTime" },
+      { type: "color", label: "🌿 Background Color", object: window.MOD, property: "bgColor", onChange: (val) => { setBackgroundColor(val); } },
+      { type: "color", label: "Jitter Line Color", object: window.MOD, property: "jitterColor" }
+    ], { folder: "VISUALS" });
+
+    gui.Register([{ type: "folder", label: "AUTOMATION", open: false }]);
+    gui.Register([
+      { type: "checkbox", label: "Autoloot [T] (periodic)", object: window.MOD, property: "autoloot" },
+      { type: "range", label: "Loot Delay (ms)", min: 100, max: 1000, step: 50, object: window.MOD, property: "lootDelay" },
+      { type: "checkbox", label: "Auto Run [Q]", object: window.MOD, property: "autorun" },
+      { type: "checkbox", label: "Anti-AFK", object: window.MOD, property: "antiAfk" },
+      { type: "checkbox", label: "🔄 Anti-Aim", object: window.MOD, property: "antiAimEnabled" },
+      { type: "range", label: "Anti-Aim Speed (ms)", min: 50, max: 1000, step: 10, object: window.MOD, property: "antiAimSpeed" }
+    ], { folder: "AUTOMATION" });
+
+    gui.Register([{ type: "folder", label: "SPAM", open: false }]);
+    gui.Register([
+      { type: "checkbox", label: "Enable Chat Spam", object: window.MOD, property: "chatSpamEnabled", onChange: () => { toggleChatSpam(); } },
+      { type: "text", label: "Spam Text", object: window.MOD, property: "chatSpamText", onChange: () => { if (window.MOD.chatSpamEnabled) { stopChatSpam(); startChatSpam(); } saveConfig(); } },
+      { type: "range", label: "Delay (ms)", min: 500, max: 10000, step: 100, object: window.MOD, property: "chatSpamDelay", onChange: () => { if (window.MOD.chatSpamEnabled) { stopChatSpam(); startChatSpam(); } saveConfig(); } }
+    ], { folder: "SPAM" });
+
+    gui.Register([{ type: "folder", label: "TOKEN CHANGER", open: false }]);
+    gui.Register([
+      { type: "button", label: "📋 Copy Token (short)", action: copyTokenToClipboard },
+      { type: "button", label: "🗑️ Reset Token & Reload", action: resetToken },
+      { type: "text", label: "Paste Token (JSON or \"t\" \"id\" \"uid\")", object: window.MOD, property: "tokenInput" },
+      { type: "button", label: "🔄 Change Token & Reload", action: changeTokenFromInput }
+    ], { folder: "TOKEN CHANGER" });
+
+    gui.Register([{ type: "folder", label: "PLAYER LIST", open: false }]);
+    gui.Register([
+      { type: "button", label: "📋 Show All Players (O)", action: () => togglePlayerList() }
+    ], { folder: "PLAYER LIST" });
+
+    gui.Register([{ type: "folder", label: "BINDS", open: false }]);
+    function bindKey(label, property) {
+      gui.Register({
+        type: "text",
+        label: label,
+        object: window.MOD,
+        property: property,
+        readonly: true,
+        onFocus: (input) => {
+          input.value = "...";
+          function keyListener(e) {
+            window.MOD[property] = e.code;
+            input.value = e.code;
+            document.removeEventListener("keydown", keyListener);
+          }
+          document.addEventListener("keydown", keyListener);
+        }
+      }, { folder: "BINDS" });
+    }
+    bindKey("Aimbot Key", "AimbotKey");
+    bindKey("Jitter Key", "JitterKey");
+    bindKey("Auto Run Key", "AutoRunKey");
+    bindKey("Autoloot Key", "AutoLootKey");
+    bindKey("X-Ray Key", "XrayKey");
+    bindKey("Pred Key", "PredKey");
+    bindKey("Spam Toggle Key", "SpamToggleKey");
+    bindKey("Anti-Aim Key", "AntiAimKey");
+
+    gui.Register([{ type: "folder", label: "CFG", open: false }]);
+    gui.Register([
+      { type: "button", label: "Save Settings", action: () => { saveConfig(); alert("Config saved!"); } },
+      { type: "button", label: "Reset Config", action: () => {
+        const defaults = {
+          aimEnabled: true, silentAim: false, aimOnShootOnly: false, jitterEnabled: false,
+          esp: true, xray: false, autoloot: true, autorun: false, antiAfk: true,
+          predLine: true, xrayOpacity: 35, lootDelay: 300,
+          predColor: "#ff4444", jitterColor: "#ffff00",
+          aimPrediction1: 20, aimPrediction2: 40, activePrediction: 1,
+          AimbotKey: "KeyB", JitterKey: "KeyJ", AutoRunKey: "KeyQ", AutoLootKey: "KeyT",
+          XrayKey: "KeyZ", PredKey: "KeyX", ShowMines: true, ShowSpikes: true, ShowWires: true,
+          ShowFps: true, ShowPing: true, ShowTime: true,
+          bgColor: "#3D5942",
+          chatSpamEnabled: false, chatSpamText: "Tem Inovation!", chatSpamDelay: 2000,
+          tokenInput: "", SpamToggleKey: "KeyP",
+          antiAimEnabled: false, antiAimSpeed: 300, AntiAimKey: "KeyV"
+        };
+        for (const key in defaults) {
+          if (key in window.MOD) window.MOD[key] = defaults[key];
+        }
+        saveConfig();
+        gui.updateDisplay();
+        setBackgroundColor(window.MOD.bgColor);
+        stopChatSpam();
+        alert("Config reset to defaults.");
+      }}
+    ], { folder: "CFG" });
+
+    console.log("[GUI] Панель загружена!");
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initGUI();
+  } else {
+    window.addEventListener('DOMContentLoaded', initGUI);
+  }
+
+  // ===== ПЛЕЙЕРЛИСТ =====
+  let playerMap = new Map();
+  let playerListPanel = null;
+  let copiedTimestamp = 0;
+  let copiedName = "";
+
+  function createPlayerPanels() {
+    const style = document.createElement('style');
+    style.textContent = `
+      .omrx-player-panel {
+        position: fixed;
+        top: 20%;
+        left: 20%;
+        width: 320px;
+        max-height: 400px;
+        background: #080a10;
+        border: 1px solid rgba(0,255,163,0.13);
+        border-radius: 10px;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        z-index: 2147483647;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 0 1px rgba(0,0,0,.8), 0 32px 80px rgba(0,0,0,.95);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease-in-out;
+      }
+      .omrx-p-head {
+        padding: 12px 18px;
+        background: linear-gradient(90deg, #0d1018 0%, #0a1420 50%, #0d1018 100%);
+        color: #dde8f0;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(0,255,163,0.1);
+        border-radius: 10px 10px 0 0;
+        cursor: grab;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .omrx-p-body {
+        padding: 10px;
+        overflow-y: auto;
+        flex-grow: 1;
+      }
+      .omrx-p-body::-webkit-scrollbar { width: 3px; }
+      .omrx-p-body::-webkit-scrollbar-thumb { background: rgba(0,255,163,.15); border-radius: 2px; }
+      .omrx-p-foot {
+        padding: 8px 18px;
+        background: #060710;
+        color: rgba(0,255,163,0.4);
+        font-size: 9px;
+        font-weight: 800;
+        border-top: 1px solid rgba(0,255,163,0.07);
+        border-radius: 0 0 10px 10px;
+      }
+      .pl-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        color: #8a95ab;
+        font-size: 11.5px;
+        font-weight: 500;
+        background: #0b0e18;
+        border: 1px solid rgba(0,255,163,0.07);
+        border-radius: 6px;
+        margin-bottom: 4px;
+      }
+      .pl-copy {
+        background: rgba(0,255,163,0.06);
+        color: #00e890;
+        font-size: 10px;
+        cursor: pointer;
+        padding: 3px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,255,163,0.18);
+        transition: background .12s;
+      }
+      .pl-copy:hover { background: rgba(0,255,163,0.13); color: #00ffa3; }
+    `;
+    document.head.appendChild(style);
+
+    playerListPanel = document.createElement('div');
+    playerListPanel.id = 'omrx-pl-panel';
+    playerListPanel.className = 'omrx-player-panel';
+    playerListPanel.innerHTML = `
+      <div class="omrx-p-head" id="pl-head">Список игроков <span style="font-size:10px;">(ID + имя)</span></div>
+      <div class="omrx-p-body" id="pl-body"></div>
+      <div class="omrx-p-foot" id="pl-foot">Игроков: 0</div>
+    `;
+    document.body.appendChild(playerListPanel);
+
+    makeDraggable(playerListPanel, 'pl-head');
+
+    setInterval(() => {
+      if (playerListPanel && playerListPanel.style.opacity === '1') renderPlayerList();
+    }, 500);
+  }
+
+  function makeDraggable(panel, handleId) {
+    let dragging = false, offsetX, offsetY;
+    const handle = panel.querySelector(`#${handleId}`);
+    if (!handle) return;
+    handle.onmousedown = (e) => {
+      dragging = true;
+      const rect = panel.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      panel.style.transform = 'none';
+      panel.style.left = rect.left + 'px';
+      panel.style.top = rect.top + 'px';
+      e.preventDefault();
+    };
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      panel.style.left = e.clientX - offsetX + 'px';
+      panel.style.top = e.clientY - offsetY + 'px';
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+  }
+
+  function renderPlayerList() {
+    const body = document.getElementById('pl-body');
+    const foot = document.getElementById('pl-foot');
+    if (!body) return;
+    body.innerHTML = '';
+    const sorted = [...playerMap.entries()].sort((a,b) => a[0] - b[0]);
+    for (let [id, name] of sorted) {
+      const item = document.createElement('div');
+      item.className = 'pl-item';
+      const btnText = (Date.now() - copiedTimestamp < 1500 && copiedName === name) ? 'Скопировано!' : 'Копировать';
+      item.innerHTML = `<span>${name} <small style="color:#2e3448;">#${id}</small></span><button class="pl-copy">${btnText}</button>`;
+      item.querySelector('.pl-copy').onclick = () => {
+        navigator.clipboard.writeText(name);
+        copiedTimestamp = Date.now();
+        copiedName = name;
+        renderPlayerList();
+      };
+      body.appendChild(item);
+    }
+    if (foot) foot.innerText = `Игроков: ${sorted.length}`;
+  }
+
+  function togglePlayerList() {
+    if (!playerListPanel) return;
+    const visible = playerListPanel.style.opacity === '1';
+    playerListPanel.style.opacity = visible ? '0' : '1';
+    playerListPanel.style.pointerEvents = visible ? 'none' : 'all';
+    if (!visible) renderPlayerList();
+  }
+
+  // ===== ХУК ВЕБСОКЕТА =====
+  let originalWsSend = null;
+  let lastPlayerAngle = 0;
+  let wsConnection = null;
+
+  function hookWebSocket() {
+    if (originalWsSend) return;
+    originalWsSend = window.WebSocket.prototype.send;
+    window.WebSocket.prototype.send = function(data) {
+      if (!this._temHooked) {
+        this._temHooked = true;
+        wsConnection = this;
+        this.addEventListener('message', e => {
+          try {
+            if (typeof e.data === 'string') {
+              const msg = JSON.parse(e.data);
+              if (msg[0] === 2) {
+                playerMap.clear();
+                for (let i = 1; i < msg.length; i++) {
+                  let name = msg[i];
+                  if (!name || name.trim() === "") {
+                    name = "Игрок #" + i;
+                  }
+                  playerMap.set(i, name);
+                }
+                rebuildNameIndexFromMap(playerMap);
+                renderPlayerList();
+              }
+              if (msg[0] === 1) {
+                const id = msg[1];
+                let name = null;
+                for (let i = 2; i < msg.length; i++) {
+                  if (typeof msg[i] === "string" && msg[i].trim().length > 0) {
+                    name = msg[i];
+                    break;
+                  }
+                }
+                if (!name) {
+                  name = "Игрок #" + id;
+                }
+                playerMap.set(id, name);
+                rebuildNameIndexFromMap(playerMap);
+                renderPlayerList();
+              }
+              if (msg[0] === 5) {
+                playerMap.delete(msg[1]);
+                rebuildNameIndexFromMap(playerMap);
+                renderPlayerList();
+              }
+            }
+          } catch(err) {}
+        });
+      }
+
+      if (window.MOD.silentAim && window.MOD.aimEnabled) {
+        try {
+          if (typeof data === 'string') {
+            const packet = JSON.parse(data);
+            if (Array.isArray(packet) && packet[0] === 4 && currentTarget && predictedPos) {
+              const sp = { x: selfScreenX, y: selfScreenY };
+              let angleDeg = Math.atan2(predictedPos.y - sp.y, predictedPos.x - sp.x) * 180 / Math.PI;
+              if (angleDeg < 0) angleDeg += 360;
+              if (window.MOD.jitterEnabled) {
+                const oscillation = Math.sin(jitterPhase * Math.PI * 2);
+                const jitterOffset = 20 * oscillation;
+                angleDeg += jitterOffset;
+                if (angleDeg < 0) angleDeg += 360;
+                if (angleDeg > 360) angleDeg -= 360;
+              }
+              const anglePacket = JSON.stringify([6, Math.round(angleDeg)]);
+              originalWsSend.call(this, anglePacket);
+              return originalWsSend.call(this, data);
+            }
+          }
+        } catch(e) {}
+      }
+      return originalWsSend.call(this, data);
+    };
+  }
+
+  function sendWsPacket(packet) {
+    try {
+      let ws = wsConnection || window.ws || window.socket || window.connection;
+      if (!ws) {
+        for (let key in window) {
+          try {
+            if (window[key] && window[key].send && window[key].readyState === WebSocket.OPEN) {
+              if (window[key].url && window[key].url.includes('devast.io')) {
+                ws = window[key];
+                break;
+              }
+            }
+          } catch(e) {}
+        }
+      }
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(packet));
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  // ===== АВТОЛУТ (периодический) =====
+  let autoLootInterval = null;
+
+  function startAutoLoot() {
+    if (autoLootInterval) clearInterval(autoLootInterval);
+    if (!window.MOD.autoloot) return;
+    autoLootInterval = setInterval(() => {
+      if (wsConnection && wsConnection.readyState === 1) {
+        try { wsConnection.send(JSON.stringify([3])); } catch(e) {}
+      }
+      const fe = new KeyboardEvent('keydown', { key: 'f', code: 'KeyF', keyCode: 70, which: 70, bubbles: true });
+      document.dispatchEvent(fe);
+      setTimeout(() => {
+        const fu = new KeyboardEvent('keyup', { key: 'f', code: 'KeyF', keyCode: 70, which: 70, bubbles: true });
+        document.dispatchEvent(fu);
+      }, 20);
+    }, window.MOD.lootDelay);
+  }
+
+  function stopAutoLoot() {
+    if (autoLootInterval) { clearInterval(autoLootInterval); autoLootInterval = null; }
+  }
+
+  function toggleAutoLoot() {
+    if (window.MOD.autoloot) startAutoLoot();
+    else stopAutoLoot();
+  }
+
+  // ===== ОБРАБОТКА КЛАВИШ =====
+  const ENG_TO_RUS = {
+    'q':'й','w':'ц','e':'у','r':'к','t':'е','y':'н','u':'г','i':'ш','o':'щ','p':'з','[':'х',']':'ъ',
+    'a':'ф','s':'ы','d':'в','f':'а','g':'п','h':'р','j':'о','k':'л','l':'д',';':'ж','\'':'э',
+    'z':'я','x':'ч','c':'с','v':'м','b':'и','n':'т','m':'ь',',':'б','.':'ю','/':'.','`':'ё'
+  };
+  const RUS_TO_ENG = {};
+  for (const eng in ENG_TO_RUS) { RUS_TO_ENG[ENG_TO_RUS[eng]] = eng; }
+
+  function matchKey(pressed, target) {
+    const pk = (pressed || "").toLowerCase();
+    const tk = (target || "").toLowerCase();
+    if (pk === tk) return true;
+    if (ENG_TO_RUS[tk] && pk === ENG_TO_RUS[tk]) return true;
+    if (RUS_TO_ENG[tk] && pk === RUS_TO_ENG[tk]) return true;
+    return false;
+  }
+
+  // ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
+  let gameCanvas = null;
+  let overlayCanvas = null;
+  let overlayCtx = null;
+  let cheatActive = false;
+  let pendingDrawCalls = [];
+  let prevFrameEntities = [];
+  let selfScreenX = innerWidth/2, selfScreenY = innerHeight/2;
+  let mouseX = innerWidth/2, mouseY = innerHeight/2;
+  let autoRunInterval = null;
+  let antiAfkInterval = null;
+  let currentTarget = null;
+  let predictedPos = null;
+  let mouseDown = false;
+
+  const JITTER_SPEED = 6;
+  const JITTER_RADIUS = 50;
+
+  let aimX = innerWidth/2, aimY = innerHeight/2;
+  let jitterPhase = 0;
+  let lastJitterTime = 0;
+
+  let selfImageRef = null;
+  let selfEntity = null;
+  let selfWorldX = null;
+  let selfWorldY = null;
+  let selfLastSeenAt = 0;
+  const SELF_LOST_TIMEOUT_MS = 3000;
+  const SELF_REACQUIRE_MAX_DIST = 100;
+  const SELF_INIT_MAX_DIST = 200;
+
+  let hudEl = null;
+  let hudLabels = {};
+
+  // ===== ИНФОРМАЦИОННЫЙ БЛОК (FPS, время, пинг) =====
+  let infoDisplay = null;
+  let fpsElement = null;
+  let pingElement = null;
+  let timeElement = null;
+  let frameCount = 0;
+  let lastUpdateTime = performance.now();
+  let currentFps = 0;
+  let pseudoPing = 0;
+
+  function createInfoDisplay() {
+    if (infoDisplay) return;
+    infoDisplay = document.createElement("div");
+    infoDisplay.style.position = "fixed";
+    infoDisplay.style.top = "9px";
+    infoDisplay.style.right = "500px";
+    infoDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
+    infoDisplay.style.color = "#FFFFFF";
+    infoDisplay.style.padding = "10px";
+    infoDisplay.style.borderRadius = "8px";
+    infoDisplay.style.fontFamily = "Arial, sans-serif";
+    infoDisplay.style.fontSize = "20px";
+    infoDisplay.style.fontWeight = "bold";
+    infoDisplay.style.zIndex = "9999";
+    infoDisplay.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.6)";
+    infoDisplay.style.width = "auto";
+    infoDisplay.style.whiteSpace = "nowrap";
+    infoDisplay.style.userSelect = "none";
+    infoDisplay.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+    infoDisplay.style.display = "flex";
+    infoDisplay.style.flexDirection = "column";
+    infoDisplay.style.alignItems = "flex-start";
+    infoDisplay.style.maxWidth = "90vw";
+    document.body.appendChild(infoDisplay);
+
+    fpsElement = document.createElement("span");
+    pingElement = document.createElement("span");
+    timeElement = document.createElement("span");
+
+    function createSeparator() {
+      const sep = document.createElement("div");
+      sep.style.height = "1px";
+      sep.style.width = "100%";
+      sep.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+      sep.style.margin = "5px 0";
+      return sep;
+    }
+    const sep1 = createSeparator();
+    const sep2 = createSeparator();
+
+    infoDisplay.appendChild(fpsElement);
+    infoDisplay.appendChild(sep1);
+    infoDisplay.appendChild(pingElement);
+    infoDisplay.appendChild(sep2);
+    infoDisplay.appendChild(timeElement);
+
+    sep1.id = "info-sep1";
+    sep2.id = "info-sep2";
+
+    setInterval(() => {
+      const start = performance.now();
+      setTimeout(() => {
+        const end = performance.now();
+        pseudoPing = Math.max(0, Math.round(end - start));
+      }, 0);
+    }, 500);
+
+    function renderInfoLoop() {
+      updateInfoDisplay();
+      requestAnimationFrame(renderInfoLoop);
+    }
+    renderInfoLoop();
+  }
+
+  function updateInfoDisplay() {
+    if (!infoDisplay) return;
+    const showFps = window.MOD.ShowFps;
+    const showPing = window.MOD.ShowPing;
+    const showTime = window.MOD.ShowTime;
+
+    if (!showFps && !showPing && !showTime) {
+      infoDisplay.style.display = "none";
+      return;
+    }
+    infoDisplay.style.display = "flex";
+
+    frameCount++;
+    const now = performance.now();
+    const delta = now - lastUpdateTime;
+    if (delta >= 1000) {
+      currentFps = Math.round(frameCount * 1000 / delta);
+      frameCount = 0;
+      lastUpdateTime = now;
+    }
+    fpsElement.textContent = showFps ? "FPS: " + currentFps : "";
+    fpsElement.style.display = showFps ? "block" : "none";
+
+    pingElement.textContent = showPing ? "Ping: " + pseudoPing + "ms" : "";
+    pingElement.style.display = showPing ? "block" : "none";
+
+    const d = new Date();
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    timeElement.textContent = showTime ? "Time: " + hours + ":" + minutes : "";
+    timeElement.style.display = showTime ? "block" : "none";
+
+    const sep1 = document.getElementById("info-sep1");
+    const sep2 = document.getElementById("info-sep2");
+    if (sep1) {
+      sep1.style.display = (showFps && showPing) ? "block" : "none";
+    }
+    if (sep2) {
+      sep2.style.display = (showPing && showTime) || (showFps && showTime) ? "block" : "none";
+    }
+  }
+
+  // ===== HUD (левый) =====
+  function createHUD() {
+    if (hudEl) return;
+    hudEl = document.createElement("div");
+    hudEl.id = "solaris-hud";
+    Object.assign(hudEl.style, {
+      position: "fixed",
+      top: "50%",
+      left: "15px",
+      transform: "translateY(-50%)",
+      zIndex: "9999998",
+      pointerEvents: "none",
+      display: "flex",
+      flexDirection: "column",
+      gap: "5px",
+      fontFamily: "'Segoe UI', Arial, sans-serif",
+      fontSize: "13px",
+      fontWeight: "700",
+      color: "#ffffff",
+      letterSpacing: "0.5px",
+      userSelect: "none"
+    });
+
+    const modules = [
+      { id: "aimbot", label: "AIMBOT" },
+      { id: "jitter", label: "JITTER" },
+      { id: "esp", label: "ESP" },
+      { id: "xray", label: "X-RAY" },
+      { id: "autoloot", label: "AUTOLOOT" },
+      { id: "autorun", label: "AUTO RUN" },
+      { id: "pred1", label: "PRED 1" },
+      { id: "pred2", label: "PRED 2" },
+      { id: "predline", label: "PREDICTION" },
+      { id: "antiafk", label: "ANTI-AFK: ON" },
+      { id: "spam", label: "SPAM" },
+      { id: "antiaim", label: "ANTI-AIM: OFF" }
+    ];
+
+    modules.forEach(mod => {
+      const span = document.createElement("span");
+      span.textContent = mod.label;
+      span.id = "hud-" + mod.id;
+      hudLabels[mod.id] = span;
+      hudEl.appendChild(span);
+    });
+
+    document.body.appendChild(hudEl);
+    updateHUD();
+  }
+
+  function updateHUD() {
+    if (!hudEl) return;
+    const states = {
+      aimbot: window.MOD.aimEnabled,
+      esp: window.MOD.esp,
+      xray: window.MOD.xray,
+      autoloot: window.MOD.autoloot,
+      autorun: window.MOD.autorun,
+      predline: window.MOD.predLine,
+      antiafk: window.MOD.antiAfk,
+      spam: window.MOD.chatSpamEnabled
+    };
+    for (const [key, active] of Object.entries(states)) {
+      const el = hudLabels[key];
+      if (el) el.style.color = active ? "#ffff00" : "#ffffff";
+    }
+    if (hudLabels.jitter) {
+      hudLabels.jitter.style.color = window.MOD.jitterEnabled ? "#ffff00" : "#ffffff";
+    }
+    if (hudLabels.pred1) {
+      hudLabels.pred1.textContent = "PRED 1: " + window.MOD.aimPrediction1;
+      hudLabels.pred1.style.color = window.MOD.activePrediction === 1 ? "#ffff00" : "#ffffff";
+    }
+    if (hudLabels.pred2) {
+      hudLabels.pred2.textContent = "PRED 2: " + window.MOD.aimPrediction2;
+      hudLabels.pred2.style.color = window.MOD.activePrediction === 2 ? "#ffff00" : "#ffffff";
+    }
+    if (hudLabels.antiafk) {
+      hudLabels.antiafk.textContent = "ANTI-AFK: " + (window.MOD.antiAfk ? "ON" : "OFF");
+    }
+    if (hudLabels.spam) {
+      hudLabels.spam.textContent = "SPAM: " + (window.MOD.chatSpamEnabled ? "ON" : "OFF");
+    }
+    if (hudLabels.antiaim) {
+      hudLabels.antiaim.textContent = "ANTI-AIM: " + (window.MOD.antiAimEnabled ? "ON" : "OFF");
+      hudLabels.antiaim.style.color = window.MOD.antiAimEnabled ? "#ffff00" : "#ffffff";
+    }
+  }
+
+  // ===== АНТИ-АИМ =====
+  let antiAimInterval = null;
+
+  function startAntiAim() {
+    if (antiAimInterval) clearInterval(antiAimInterval);
+    if (!window.MOD.antiAimEnabled) return;
+    const keys = ["w", "a", "s", "d"];
+    let lastKey = "d";
+    antiAimInterval = setInterval(() => {
+      if (lastKey) {
+        const upEvent = new KeyboardEvent('keyup', { key: lastKey, code: 'Key' + lastKey.toUpperCase(), bubbles: true });
+        document.dispatchEvent(upEvent);
+        window.dispatchEvent(upEvent);
+      }
+      let newKey;
+      do {
+        newKey = keys[Math.floor(Math.random() * keys.length)];
+      } while (newKey === lastKey && keys.length > 1);
+      const downEvent = new KeyboardEvent('keydown', { key: newKey, code: 'Key' + newKey.toUpperCase(), bubbles: true });
+      document.dispatchEvent(downEvent);
+      window.dispatchEvent(downEvent);
+      lastKey = newKey;
+    }, window.MOD.antiAimSpeed);
+  }
+
+  function stopAntiAim() {
+    if (antiAimInterval) { clearInterval(antiAimInterval); antiAimInterval = null; }
+    ["w", "a", "s", "d"].forEach(k => {
+      const upEvent = new KeyboardEvent('keyup', { key: k, code: 'Key' + k.toUpperCase(), bubbles: true });
+      document.dispatchEvent(upEvent);
+      window.dispatchEvent(upEvent);
+    });
+  }
+
+  function toggleAntiAim() {
+    if (window.MOD.antiAimEnabled) startAntiAim();
+    else stopAntiAim();
+  }
+
+  // ===== ОСТАЛЬНЫЕ ФУНКЦИИ =====
+  function startAntiAfk() {
+    if (antiAfkInterval) return;
+    antiAfkInterval = setInterval(function() {
+      if (!window.MOD.antiAfk) return;
+      document.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Shift", code: "ShiftLeft", keyCode: 16, which: 16,
+        shiftKey: true, bubbles: true, cancelable: true, view: window
+      }));
+      setTimeout(function() {
+        document.dispatchEvent(new KeyboardEvent("keyup", {
+          key: "Shift", code: "ShiftLeft", keyCode: 16, which: 16,
+          shiftKey: false, bubbles: true, cancelable: true, view: window
+        }));
+      }, 50);
+    }, 30000);
+  }
+
+  function startAutoRun() {
+    if (autoRunInterval) return;
+    autoRunInterval = setInterval(function() {
+      if (!window.MOD.autorun) return;
+      document.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Shift", code: "ShiftLeft", keyCode: 16, which: 16,
+        bubbles: true, cancelable: true, view: window
+      }));
+    }, 200);
+  }
+  function stopAutoRun() { if (autoRunInterval) { clearInterval(autoRunInterval); autoRunInterval = null; } }
+  function stopAntiAfk() { if (antiAfkInterval) { clearInterval(antiAfkInterval); antiAfkInterval = null; } }
+
+  function findCanvas() {
+    const check = setInterval(() => {
+      const c = document.getElementById("can") || document.querySelector("canvas");
+      if (c && c.width > 300 && c.height > 300) {
+        gameCanvas = c;
+        clearInterval(check);
+        setTimeout(() => startCheat(), 3000);
+      }
+    }, 500);
+  }
+
+  function isXrayTarget(src) {
+    const s = src.toLowerCase();
+    if (s.includes("wall") || s.includes("door")) return true;
+    if (s.includes("tree") || (s.includes("wood") && (s.includes("trunk") || s.includes("log")))) return true;
+    if (s.includes("bush") || s.includes("plant") || s.includes("shrub") || s.includes("grass")) return true;
+    if (s.includes("rock")) return true;
+    if (s.includes("cactus")) return true;
+    if (s.includes("floor") || s.includes("ground")) return true;
+    return false;
+  }
+
+  function init() {
+    if (document.body) {
+      createHUD();
+      createInfoDisplay();
+      findCanvas();
+    } else {
+      requestAnimationFrame(init);
+    }
+  }
+  init();
+
+  // ===== ПЕРЕХВАТ МЫШИ =====
+  const origDesc = Object.getOwnPropertyDescriptor(MouseEvent.prototype, 'clientX')?.get;
+  const origDescY = Object.getOwnPropertyDescriptor(MouseEvent.prototype, 'clientY')?.get;
+
+  function overrideProp(proto, prop, getter) {
+    try { Object.defineProperty(proto, prop, { get: getter, configurable: true }); } catch(e) {}
+  }
+
+  if (origDesc && origDescY) {
+    overrideProp(MouseEvent.prototype, 'clientX', function() {
+      if (this._aim) return origDesc.call(this);
+      if (window.MOD.aimEnabled && currentTarget && predictedPos) {
+        if (window.MOD.aimOnShootOnly && !mouseDown) return origDesc.call(this);
+        return Math.round(aimX);
+      }
+      return origDesc.call(this);
+    });
+    overrideProp(MouseEvent.prototype, 'clientY', function() {
+      if (this._aim) return origDescY.call(this);
+      if (window.MOD.aimEnabled && currentTarget && predictedPos) {
+        if (window.MOD.aimOnShootOnly && !mouseDown) return origDescY.call(this);
+        return Math.round(aimY);
+      }
+      return origDescY.call(this);
+    });
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    if (e._aim) return;
+    mouseX = origDesc ? origDesc.call(e) : e.clientX;
+    mouseY = origDescY ? origDescY.call(e) : e.clientY;
+    if (!window.MOD.aimEnabled || !currentTarget) { aimX = mouseX; aimY = mouseY; }
+  }, true);
+
+  window.addEventListener("mousedown", function(e) { if (e.button === 0) mouseDown = true; });
+  window.addEventListener("mouseup", function(e) { if (e.button === 0) mouseDown = false; });
+
+  // ===== ЗАПУСК ЧИТА =====
+  function startCheat() {
+    if (cheatActive || !gameCanvas) return;
+    cheatActive = true;
+    if (window.MOD.autorun) startAutoRun();
+    if (window.MOD.antiAfk) startAntiAfk();
+    if (window.MOD.chatSpamEnabled) startChatSpam();
+    if (window.MOD.antiAimEnabled) startAntiAim();
+    if (window.MOD.autoloot) startAutoLoot();
+
+    createPlayerPanels();
+    hookWebSocket();
+
+    (function hookCanvas() {
+      if (!gameCanvas || gameCanvas.__hooked) return;
+      const ctx = gameCanvas.getContext("2d");
+      if (!ctx) return;
+      gameCanvas.__hooked = true;
+      const orig = ctx.drawImage.bind(ctx);
+      ctx.drawImage = function() {
+        const args = arguments;
+        if (window.MOD.xray && args.length >= 3 && args[0] && args[0].src) {
+          if (isXrayTarget(args[0].src)) {
+            this.globalAlpha = window.MOD.xrayOpacity / 100;
+            orig.apply(this, args);
+            this.globalAlpha = 1;
+            return;
+          }
+        }
+        orig.apply(this, args);
+        if (args.length >= 3 && args[0] && args[0].src) {
+          const src = args[0].src;
+          const isSkin = (src.includes("night-skin") || src.includes("day-skin"));
+          if (isSkin) {
+            let dx, dy, dw, dh;
+            if (args.length === 3) { dx = args[1]; dy = args[2]; dw = args[0].width || 32; dh = args[0].height || 32; }
+            else if (args.length === 5) { dx = args[1]; dy = args[2]; dw = args[3]; dh = args[4]; }
+            else if (args.length === 9) { dx = args[5]; dy = args[6]; dw = args[7]; dh = args[8]; }
+            else return;
+            const t = this.getTransform();
+            const wx = t.e + (t.a * (dx + dw / 2) + t.c * (dy + dh / 2));
+            const wy = t.f + (t.b * (dx + dw / 2) + t.d * (dy + dh / 2));
+            pendingDrawCalls.push({ dx, dy, dw, dh, t, img: args[0], worldX: wx, worldY: wy });
+          }
+        }
+      };
+    })();
+
+    (function createOverlay() {
+      if (overlayCanvas) return;
+      overlayCanvas = document.createElement("canvas");
+      overlayCanvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999990;";
+      document.body.appendChild(overlayCanvas);
+      overlayCtx = overlayCanvas.getContext("2d");
+      function rs() { overlayCanvas.width = innerWidth; overlayCanvas.height = innerHeight; } rs();
+      window.addEventListener("resize", rs);
+      renderLoop();
+    })();
+
+    function canvasToScreen(cx, cy) {
+      if (!gameCanvas) return { x: cx, y: cy };
+      const r = gameCanvas.getBoundingClientRect();
+      return {
+        x: r.left + cx * (r.width / (gameCanvas.width || 1)),
+        y: r.top + cy * (r.height / (gameCanvas.height || 1))
+      };
+    }
+
+    function dispatchKey(k, type) {
+      if (!k) return;
+      const code = k.toUpperCase().charCodeAt(0);
+      document.dispatchEvent(new KeyboardEvent(type, {
+        key: k,
+        code: "Key" + k.toUpperCase(),
+        keyCode: code,
+        which: code,
+        bubbles: true
+      }));
+    }
+
+    function clickCenter() {
+      const ev = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+        clientX: window.innerWidth / 2,
+        clientY: window.innerHeight / 2
+      });
+      document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2)?.dispatchEvent(ev);
+    }
+
+    // ===== ОСНОВНОЙ ЦИКЛ =====
+    function renderLoop() {
+      if (!overlayCtx || !gameCanvas) { requestAnimationFrame(renderLoop); return; }
+      const ctx = overlayCtx, W = overlayCanvas.width, H = overlayCanvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const entries = pendingDrawCalls; pendingDrawCalls = [];
+      const entities = [];
+      const now = Date.now();
+
+      if (window.MOD.jitterEnabled && !mouseDown) {
+        const deltaTime = (now - lastJitterTime) / 1000;
+        if (deltaTime > 0) {
+          jitterPhase += deltaTime * JITTER_SPEED;
+          if (jitterPhase > 1) jitterPhase -= 1;
+        }
+      }
+      lastJitterTime = now;
+
+      for (let i = 0; i < entries.length; i++) {
+        const e = entries[i];
+        const t = e.t;
+        const sx = Math.hypot(t.a, t.b), sy = Math.hypot(t.c, t.d), avg = (sx + sy) / 2;
+        const rad = Math.min(e.dw, e.dh) / 2 * avg;
+        const sp = canvasToScreen(e.worldX, e.worldY);
+        if (sp.x + rad < 0 || sp.x - rad > W || sp.y + rad < 0 || sp.y - rad > H) continue;
+        entities.push({
+          scx: sp.x, scy: sp.y, radius: rad || 18,
+          worldX: e.worldX, worldY: e.worldY,
+          img: e.img,
+          distToPlayer: Math.hypot(sp.x - selfScreenX, sp.y - selfScreenY)
+        });
+      }
+
+      // Определение своего игрока
+      let matched = false;
+      if (selfImageRef) {
+        for (const ent of entities) {
+          if (ent.img === selfImageRef) {
+            selfEntity = ent; ent.isMe = true;
+            selfWorldX = ent.worldX; selfWorldY = ent.worldY;
+            selfLastSeenAt = now; matched = true; break;
+          }
+        }
+        if (!matched && selfWorldX !== null) {
+          let best = SELF_REACQUIRE_MAX_DIST;
+          for (const ent of entities) {
+            const d = Math.hypot(ent.worldX - selfWorldX, ent.worldY - selfWorldY);
+            if (d < best) {
+              best = d;
+              selfEntity = ent;
+              ent.isMe = true;
+              selfWorldX = ent.worldX;
+              selfWorldY = ent.worldY;
+              selfLastSeenAt = now;
+              selfImageRef = ent.img;
+              matched = true;
+            }
+          }
+        }
+      }
+      if (!matched) {
+        selfEntity = null;
+        if (now - selfLastSeenAt > SELF_LOST_TIMEOUT_MS) {
+          selfImageRef = null;
+          selfWorldX = null;
+          selfWorldY = null;
+        }
+      }
+      if (!selfImageRef) {
+        let best = SELF_INIT_MAX_DIST, bestE = null;
+        for (const ent of entities) {
+          const d = Math.hypot(ent.scx - W / 2, ent.scy - H / 2);
+          if (d < best) {
+            best = d;
+            bestE = ent;
+          }
+        }
+        if (bestE) {
+          selfImageRef = bestE.img;
+          selfEntity = bestE;
+          bestE.isMe = true;
+          selfWorldX = bestE.worldX;
+          selfWorldY = bestE.worldY;
+          selfLastSeenAt = now;
+        }
+      }
+      if (selfEntity) {
+        selfScreenX = selfEntity.scx;
+        selfScreenY = selfEntity.scy;
+      } else {
+        selfScreenX = W / 2;
+        selfScreenY = H / 2;
+      }
+
+      // Скорость
+      for (const ent of entities) {
+        let vx = 0, vy = 0, bestDist = Infinity;
+        for (const p of prevFrameEntities) {
+          const d = Math.hypot(ent.scx - p.scx, ent.scy - p.scy);
+          if (d < bestDist && d < 40) {
+            bestDist = d;
+            vx = ent.scx - p.scx;
+            vy = ent.scy - p.scy;
+          }
+        }
+        ent.vx = vx;
+        ent.vy = vy;
+      }
+      prevFrameEntities = entities.map(e => ({ scx: e.scx, scy: e.scy }));
+
+      // Выбор цели
+      predictedPos = null;
+      currentTarget = null;
+      const MOUSE_RADIUS = 200;
+      let bestMouseDist = Infinity;
+      let bestPlayerDist = Infinity;
+      let candidateByMouse = null;
+      let candidateByPlayer = null;
+
+      for (const ent of entities) {
+        if (ent.isMe) continue;
+        const dMouse = Math.hypot(ent.scx - mouseX, ent.scy - mouseY);
+        const dPlayer = ent.distToPlayer;
+
+        if (dMouse < bestMouseDist) {
+          bestMouseDist = dMouse;
+          candidateByMouse = ent;
+        }
+        if (dPlayer < bestPlayerDist) {
+          bestPlayerDist = dPlayer;
+          candidateByPlayer = ent;
+        }
+      }
+
+      if (candidateByMouse && bestMouseDist < MOUSE_RADIUS) {
+        currentTarget = candidateByMouse;
+      } else if (candidateByPlayer) {
+        currentTarget = candidateByPlayer;
+      }
+
+      // Предсказание
+      if (currentTarget) {
+        const predValue = window.MOD.activePrediction === 1 ? window.MOD.aimPrediction1 : window.MOD.aimPrediction2;
+        const predX = currentTarget.scx + (currentTarget.vx || 0) * predValue;
+        const predY = currentTarget.scy + (currentTarget.vy || 0) * predValue;
+        predictedPos = { x: predX, y: predY };
+      }
+
+      // Аимбот
+      if (window.MOD.aimEnabled && currentTarget && predictedPos) {
+        const sp = { x: selfScreenX, y: selfScreenY };
+
+        let angleDeg = Math.atan2(predictedPos.y - sp.y, predictedPos.x - sp.x) * 180 / Math.PI;
+        if (angleDeg < 0) angleDeg += 360;
+
+        if (window.MOD.jitterEnabled) {
+          const oscillation = Math.sin(jitterPhase * Math.PI * 2);
+          const jitterOffset = 20 * oscillation;
+          angleDeg += jitterOffset;
+          if (angleDeg < 0) angleDeg += 360;
+          if (angleDeg > 360) angleDeg -= 360;
+        }
+
+        if (!window.MOD.silentAim) {
+          sendWsPacket([6, Math.round(angleDeg)]);
+          const angleRad = angleDeg * Math.PI / 180;
+          const distAim = 1000;
+          aimX = sp.x + Math.cos(angleRad) * distAim;
+          aimY = sp.y + Math.sin(angleRad) * distAim;
+        } else {
+          const angleRad = angleDeg * Math.PI / 180;
+          const distAim = 200;
+          aimX = sp.x + Math.cos(angleRad) * distAim;
+          aimY = sp.y + Math.sin(angleRad) * distAim;
+        }
+
+        const aimEvent = new MouseEvent('mousemove', {
+          clientX: aimX,
+          clientY: aimY,
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        Object.defineProperty(aimEvent, '_aim', { value: true, configurable: true });
+        document.dispatchEvent(aimEvent);
+
+        if (window.MOD.predLine) {
+          ctx.strokeStyle = window.MOD.predColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(selfScreenX, selfScreenY);
+          ctx.lineTo(predictedPos.x, predictedPos.y);
+          ctx.stroke();
+
+          if (window.MOD.jitterEnabled) {
+            ctx.strokeStyle = window.MOD.jitterColor || "#ffff00";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(selfScreenX, selfScreenY);
+            ctx.lineTo(aimX, aimY);
+            ctx.stroke();
+            ctx.strokeStyle = window.MOD.jitterColor || "#ffff00";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, JITTER_RADIUS, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      } else {
+        aimX = mouseX;
+        aimY = mouseY;
+      }
+
+      // ESP
+      if (window.MOD.esp) {
+        for (const ent of entities) {
+          if (ent.isMe) continue;
+          const isTarget = window.MOD.aimEnabled && currentTarget && ent === currentTarget;
+          ctx.strokeStyle = isTarget ? (mouseDown ? "#ff0000" : "#ff4444") : "#ffffff";
+          ctx.lineWidth = isTarget ? 2.5 : 1.5;
+          ctx.beginPath();
+          ctx.arc(ent.scx, ent.scy, ent.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      updateHUD();
+      requestAnimationFrame(renderLoop);
+    }
+
+    // ===== ХОТКЕИ =====
+    document.addEventListener("keydown", function(e) {
+      if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) return;
+      const k = e.key.toLowerCase();
+
+      if (matchKey(k, window.MOD.AimbotKey.toLowerCase().replace("key", ""))) {
+        window.MOD.aimEnabled = !window.MOD.aimEnabled;
+        if (!window.MOD.aimEnabled) currentTarget = null;
+        updateHUD();
+        saveConfig();
+      }
+      if (matchKey(k, window.MOD.JitterKey.toLowerCase().replace("key", ""))) {
+        window.MOD.jitterEnabled = !window.MOD.jitterEnabled;
+        updateHUD();
+        saveConfig();
+      }
+      if (matchKey(k, window.MOD.AutoLootKey.toLowerCase().replace("key", ""))) {
+        window.MOD.autoloot = !window.MOD.autoloot;
+        toggleAutoLoot();
+        updateHUD();
+        saveConfig();
+      }
+      if (matchKey(k, window.MOD.XrayKey.toLowerCase().replace("key", ""))) {
+        window.MOD.xray = !window.MOD.xray;
+        updateHUD();
+        saveConfig();
+      }
+      if (matchKey(k, window.MOD.AutoRunKey.toLowerCase().replace("key", ""))) {
+        window.MOD.autorun = !window.MOD.autorun;
+        updateHUD();
+        saveConfig();
+        if (window.MOD.autorun) startAutoRun(); else stopAutoRun();
+      }
+      if (matchKey(k, window.MOD.PredKey.toLowerCase().replace("key", ""))) {
+        window.MOD.activePrediction = window.MOD.activePrediction === 1 ? 2 : 1;
+        updateHUD();
+        saveConfig();
+      }
+      if (window.MOD.SpamToggleKey && matchKey(k, window.MOD.SpamToggleKey.toLowerCase().replace("key", ""))) {
+        window.MOD.chatSpamEnabled = !window.MOD.chatSpamEnabled;
+        toggleChatSpam();
+        updateHUD();
+        saveConfig();
+      }
+      if (matchKey(k, window.MOD.AntiAimKey.toLowerCase().replace("key", ""))) {
+        window.MOD.antiAimEnabled = !window.MOD.antiAimEnabled;
+        toggleAntiAim();
+        updateHUD();
+        saveConfig();
+      }
+
+      if (e.code === "KeyO") {
+        e.preventDefault();
+        togglePlayerList();
+      }
+    });
+
+    console.log("[rat's script] Fully working with periodic autoloot.");
+    if (window.MOD.bgColor) {
+      setBackgroundColor(window.MOD.bgColor);
+    }
+  }
+
 })();
